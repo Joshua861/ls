@@ -1,0 +1,15 @@
+[package]
+name = "calculator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ariadne = { version = "0.5.0", features = ["auto-color"] }
+chumsky = "0.9.3"
+logos = "0.15.0"
+rand = "0.8.5"
+rust_decimal = "1.36.0"
+rust_decimal_macros = "1.36.0"
+strum = { version = "0.26.3", features = ["derive"] }
+strum_macros = "0.26.4"
+thiserror = "2.0.9"
