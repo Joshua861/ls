@@ -10,12 +10,13 @@ use chumsky::{
 use crate::{
     expr::Expr,
     lexer::Token,
-    utils::strings::{DotDebug, DotDisplay},
+    utils::strings::{indent, DotDebug, DotDisplay},
 };
 
 pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
-    let expr = recursive(|p| {
-        let atom = {
+    // Define `expr` and `statement` in recursive closures.
+    let statement = recursive(|stmt| {
+        let expr = recursive(|p| {
             let parenthesized = p
                 .clone()
                 .delimited_by(just(Token::LParen), just(Token::RParen));
@@ -25,7 +26,7 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
             };
 
             let negative_integer = just(Token::Minus)
-                .then(integer)
+                .then(integer.clone())
                 .map(|(_minus, expr)| Expr::Neg(Box::new(expr)));
 
             let bool = select! {
@@ -33,115 +34,124 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                 Token::False => Expr::Bool(false),
             };
 
-            parenthesized.or(integer).or(negative_integer).or(bool)
-        };
+            let variable = select! {
+                Token::Ident(name) => Expr::Variable(name),
+            };
 
-        let not = just(Token::Not)
-            .then(atom.clone())
-            .map(|(_, expr)| Expr::Not(Box::new(expr)));
-        let atom = atom.or(not);
-
-        let variable = select! {
-            Token::Ident(name) => Expr::Variable(name),
-        };
-
-        let function = select! {
-            Token::Ident(name) => name,
-        }
-        .then(
-            p.clone()
-                .separated_by(just(Token::Comma))
-                .allow_trailing()
-                .delimited_by(just(Token::LParen), just(Token::RParen)),
-        )
-        .map(|(name, args)| Expr::Function(name, args));
-
-        let atom = atom.or(function).or(variable);
-
-        let unary = just(Token::Minus)
-            .repeated()
-            .then(atom)
-            .foldr(|_op, lhs| Expr::Neg(Box::new(lhs)));
-
-        let binary_1 = unary
-            .clone()
+            let function = select! {
+                Token::Ident(name) => name,
+            }
             .then(
-                just(Token::Multiply)
-                    .or(just(Token::Divide))
-                    .or(just(Token::Modulo))
-                    .then(unary)
-                    .repeated(),
+                p.clone()
+                    .separated_by(just(Token::Comma))
+                    .allow_trailing()
+                    .delimited_by(just(Token::LParen), just(Token::RParen)),
             )
-            .foldl(|rhs, (op, lhs)| match op {
-                Token::Multiply => Expr::Mul(Box::new(lhs), Box::new(rhs)),
-                Token::Divide => Expr::Div(Box::new(lhs), Box::new(rhs)),
-                Token::Modulo => Expr::Mod(Box::new(lhs), Box::new(rhs)),
-                _ => unreachable!(),
-            });
+            .map(|(name, args)| Expr::Function(name, args));
 
-        let binary_2 = binary_1
-            .clone()
-            .then(
-                just(Token::Plus)
-                    .or(just(Token::Minus))
-                    .then(binary_1)
-                    .repeated(),
-            )
-            .foldl(|rhs, (op, lhs)| match op {
-                Token::Plus => Expr::Add(Box::new(lhs), Box::new(rhs)),
-                Token::Minus => Expr::Sub(Box::new(lhs), Box::new(rhs)),
-                _ => unreachable!(),
-            });
+            // Block parser
+            let block = just(Token::BlockStart)
+                .ignore_then(stmt.clone().repeated())
+                .then_ignore(just(Token::BlockEnd))
+                .map(Expr::Block);
 
-        let boolean_1 = binary_2
-            .clone()
-            .then(
-                just(Token::GreaterEqual)
-                    .or(just(Token::GreaterThan))
-                    .or(just(Token::LessEqual))
-                    .or(just(Token::LessThan))
-                    .or(just(Token::Equals))
-                    .or(just(Token::NotEquals))
-                    .then(binary_2.clone())
-                    .repeated(),
-            )
-            .foldl(|rhs, (op, lhs)| match op {
-                Token::GreaterEqual => Expr::Ge(Box::new(lhs), Box::new(rhs)),
-                Token::GreaterThan => Expr::Gt(Box::new(lhs), Box::new(rhs)),
-                Token::LessEqual => Expr::Le(Box::new(lhs), Box::new(rhs)),
-                Token::LessThan => Expr::Lt(Box::new(lhs), Box::new(rhs)),
-                Token::Equals => Expr::Eq(Box::new(lhs), Box::new(rhs)),
-                Token::NotEquals => Expr::Ne(Box::new(lhs), Box::new(rhs)),
-                _ => unreachable!(),
-            });
+            let atom = block
+                .or(parenthesized)
+                .or(integer)
+                .or(negative_integer)
+                .or(bool)
+                .or(function)
+                .or(variable);
 
-        let boolean_2 = boolean_1
-            .clone()
-            .then(
-                just(Token::And)
-                    .or(just(Token::Or))
-                    .or(just(Token::Xor))
-                    .then(boolean_1)
-                    .repeated(),
-            )
-            .foldl(|rhs, (op, lhs)| match op {
-                Token::And => Expr::And(Box::new(lhs), Box::new(rhs)),
-                Token::Or => Expr::Or(Box::new(lhs), Box::new(rhs)),
-                Token::Xor => Expr::Xor(Box::new(lhs), Box::new(rhs)),
-                _ => unreachable!(),
-            });
+            let not = just(Token::Not)
+                .then(atom.clone())
+                .map(|(_, expr)| Expr::Not(Box::new(expr)));
+            let unary = just(Token::Minus)
+                .repeated()
+                .then(atom.or(not))
+                .foldr(|_op, lhs| Expr::Neg(Box::new(lhs)));
 
-        boolean_2
+            let binary_1 = unary
+                .clone()
+                .then(
+                    just(Token::Multiply)
+                        .or(just(Token::Divide))
+                        .or(just(Token::Modulo))
+                        .then(unary)
+                        .repeated(),
+                )
+                .foldl(|lhs, (op, rhs)| match op {
+                    Token::Multiply => Expr::Mul(Box::new(lhs), Box::new(rhs)),
+                    Token::Divide => Expr::Div(Box::new(lhs), Box::new(rhs)),
+                    Token::Modulo => Expr::Mod(Box::new(lhs), Box::new(rhs)),
+                    _ => unreachable!(),
+                });
+
+            let binary_2 = binary_1
+                .clone()
+                .then(
+                    just(Token::Plus)
+                        .or(just(Token::Minus))
+                        .then(binary_1)
+                        .repeated(),
+                )
+                .foldl(|lhs, (op, rhs)| match op {
+                    Token::Plus => Expr::Add(Box::new(lhs), Box::new(rhs)),
+                    Token::Minus => Expr::Sub(Box::new(lhs), Box::new(rhs)),
+                    _ => unreachable!(),
+                });
+
+            let boolean_1 = binary_2
+                .clone()
+                .then(
+                    just(Token::GreaterEqual)
+                        .or(just(Token::GreaterThan))
+                        .or(just(Token::LessEqual))
+                        .or(just(Token::LessThan))
+                        .or(just(Token::Equals))
+                        .or(just(Token::NotEquals))
+                        .then(binary_2.clone())
+                        .repeated(),
+                )
+                .foldl(|lhs, (op, rhs)| match op {
+                    Token::GreaterEqual => Expr::Ge(Box::new(lhs), Box::new(rhs)),
+                    Token::GreaterThan => Expr::Gt(Box::new(lhs), Box::new(rhs)),
+                    Token::LessEqual => Expr::Le(Box::new(lhs), Box::new(rhs)),
+                    Token::LessThan => Expr::Lt(Box::new(lhs), Box::new(rhs)),
+                    Token::Equals => Expr::Eq(Box::new(lhs), Box::new(rhs)),
+                    Token::NotEquals => Expr::Ne(Box::new(lhs), Box::new(rhs)),
+                    _ => unreachable!(),
+                });
+
+            let boolean_2 = boolean_1
+                .clone()
+                .then(
+                    just(Token::And)
+                        .or(just(Token::Or))
+                        .or(just(Token::Xor))
+                        .then(boolean_1)
+                        .repeated(),
+                )
+                .foldl(|lhs, (op, rhs)| match op {
+                    Token::And => Expr::And(Box::new(lhs), Box::new(rhs)),
+                    Token::Or => Expr::Or(Box::new(lhs), Box::new(rhs)),
+                    Token::Xor => Expr::Xor(Box::new(lhs), Box::new(rhs)),
+                    _ => unreachable!(),
+                });
+
+            #[allow(clippy::let_and_return)]
+            boolean_2
+        });
+
+        let variable_declaration = just(Token::Let)
+            .then(select! { Token::Ident(k) => k })
+            .then_ignore(just(Token::AssignTo))
+            .then(expr.clone())
+            .map(|((_, name), value)| Expr::VariableDeclaration(name, Box::new(value)))
+            .then_ignore(just(Token::Eol));
+
+        variable_declaration.or(expr.clone().then_ignore(just(Token::Eol)))
     });
-
-    let variable_declaration = just(Token::Let)
-        .then(select! { Token::Ident(k) => k })
-        .then_ignore(just(Token::AssignTo))
-        .then(expr.clone())
-        .map(|((_, name), value)| Expr::VariableDeclaration(name, Box::new(value)))
-        .then_ignore(just(Token::Eol));
-
-    let statement = variable_declaration.or(expr.then_ignore(just(Token::Eol)));
 
     statement.repeated().then_ignore(end())
 }
@@ -192,7 +202,16 @@ impl Display for Expr {
                 Self::Xor(l, r) => format!("({l} ^ {r})"),
                 Self::Not(e) => format!("!{e}"),
 
-                Self::Block(_) => todo!(),
+                Self::Block(exps) => format!(
+                    "{{\n{}}}",
+                    indent(
+                        &exps
+                            .iter()
+                            .map(|e| e.display())
+                            .collect::<Vec<String>>()
+                            .join("\n")
+                    )
+                ),
 
                 Self::Variable(name) => name.to_string(),
                 Self::VariableDeclaration(name, value) => format!("let {name} := {value}"),

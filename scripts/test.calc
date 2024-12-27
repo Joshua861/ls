@@ -8,3 +8,12 @@ let cider := !(apple && bee);
 let dreams := cider ^ bee;
 let eepy := 10 > 5;
 let fidget := rand() > 0.5;
+
+let a := {
+  let y := {
+    let z := sqrt(rand());
+    10 + 2 + z;
+  };
+
+  y * 2;
+};

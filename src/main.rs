@@ -63,7 +63,7 @@ pub fn execute_block(block: &[Expr], state: &ExecutionState) -> Data {
     let mut inner_state = state.clone();
     let mut output = Data::Null;
 
-    for e in block.clone() {
+    for e in block {
         match e.eval(&mut inner_state) {
             Ok(result) => {
                 println!("{} = {}", e, result);

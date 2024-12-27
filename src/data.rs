@@ -93,18 +93,18 @@ impl ToData for bool {
 pub fn format_types(types: Vec<DataType>) -> String {
     let mut t = String::new();
 
-    write!(t, "(");
+    write!(t, "(").unwrap();
     let len = types.len();
 
     for (i, ty) in types.into_iter().enumerate() {
         if i < len - 1 {
-            write!(t, "{}, ", ty);
+            write!(t, "{}, ", ty).unwrap();
         } else {
-            write!(t, "{}", ty);
+            write!(t, "{}", ty).unwrap();
         }
     }
 
-    write!(t, ")");
+    write!(t, ")").unwrap();
 
     t
 }
