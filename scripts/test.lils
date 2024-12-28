@@ -1,0 +1,51 @@
+let x := sqrt(17) * 44.5 / 10;
+let y := rand() + rand() * 3 + max(rand_between(5, 10), 7);
+let z := 100 * x / y;
+
+print(join_array([x,y,z], " | "));
+
+let apple := 5.5 == 5.5;
+let bee := 5.5 != 123;
+let cider := !(apple && bee);
+let dreams := cider ^ bee;
+let eepy := 10 > 5;
+let fidget := rand() > 0.5;
+
+print(join_array(["apple =", apple, "\nbee =", bee, "\ncider =", cider, "\ndreams =", dreams, "\neepy =", eepy, "\nfidget =", fidget], " "));
+
+let a := {
+  let mapple := {
+    let z := sqrt(rand());
+    10 + 2 + z;
+  };
+
+  mapple * 2;
+};
+
+print(join("a = ", a));
+
+let x := if (rand() > 0.5) {
+  10;
+} else {
+  7;
+};
+
+print(join("x = ", x));
+
+let x := x + 1;
+
+print(join("x = ", x));
+
+let array := [1, 2, 3];
+
+print(array);
+
+// comment!!!
+print(uppercase("hello world"));
+print(snake_case("snakeCase"));
+
+print(sort([1000, 10, 5, 17, 1]));
+
+print("test".uppercase().center(20, "-"));
+
+PI.print();

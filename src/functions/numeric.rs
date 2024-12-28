@@ -194,3 +194,48 @@ pub fn min_descriptor() -> FunctionDescriptor {
         output: DataType::Number,
     }
 }
+
+fn ceil(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().ceil())
+        .unwrap()
+        .data()
+}
+
+pub fn ceil_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: ceil,
+        output: DataType::Number,
+    }
+}
+
+fn floor(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().floor())
+        .unwrap()
+        .data()
+}
+
+pub fn floor_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: floor,
+        output: DataType::Number,
+    }
+}
+
+fn round(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().round())
+        .unwrap()
+        .data()
+}
+
+pub fn round_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: round,
+        output: DataType::Number,
+    }
+}

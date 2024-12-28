@@ -1,10 +1,15 @@
-use std::{borrow::Borrow, collections::HashMap};
+use std::{
+    borrow::Borrow,
+    collections::HashMap,
+    fmt::{Display, Write},
+};
 
 use error::ExprError;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 
 use crate::{
-    data::{format_types, Data},
+    constants::constants,
+    data::{format_types, format_vec, Data},
     execute_block,
     functions::{
         add_descriptor, and_descriptor, builtints, div_descriptor, eq_descriptor, ge_descriptor,
@@ -12,15 +17,18 @@ use crate::{
         neg_descriptor, not_descriptor, or_descriptor, sub_descriptor, xor_descriptor,
         FunctionDescriptor, FunctionMap,
     },
-    utils::strings::DotDebug,
+    utils::strings::{indent, DotDebug, DotDisplay},
 };
 
 pub mod error;
 
+pub type VariableMap = HashMap<String, Data>;
+
 #[derive(Debug, Clone)]
 pub struct ExecutionState {
     builtins: FunctionMap,
-    variables: HashMap<String, Data>,
+    variables: VariableMap,
+    constants: VariableMap,
 }
 
 impl ExecutionState {
@@ -28,6 +36,7 @@ impl ExecutionState {
         Self {
             builtins: builtints(),
             variables: HashMap::new(),
+            constants: constants(),
         }
     }
 }
@@ -38,6 +47,8 @@ type BExpr = Box<Expr>;
 pub enum Expr {
     Num(Decimal),
     Bool(bool),
+    String(String),
+    Array(Vec<Expr>),
     Null,
 
     Neg(BExpr),
@@ -64,6 +75,8 @@ pub enum Expr {
     Function(String, Vec<Expr>),
     VariableDeclaration(String, BExpr),
     Variable(String),
+
+    If(BExpr, Vec<Expr>, Vec<(Expr, Vec<Expr>)>, Option<Vec<Expr>>),
 }
 
 pub type EResult<T> = Result<T, ExprError>;
@@ -116,6 +129,12 @@ impl Expr {
             Expr::Num(n) => Ok(Data::Number(*n)),
             Expr::Bool(b) => Ok(Data::Bool(*b)),
             Expr::Null => Ok(Data::Null),
+            Expr::String(s) => Ok(Data::String(s.clone())),
+            Expr::Array(a) => Ok(Data::Array(
+                a.iter()
+                    .map(|e| e.eval(state))
+                    .collect::<EResult<Vec<_>>>()?,
+            )),
 
             Expr::Neg(n) => run_fn(neg_descriptor(), &[n], state),
             Expr::Add(lhs, rhs) => run_fn(add_descriptor(), &[lhs, rhs], state),
@@ -136,7 +155,43 @@ impl Expr {
             Expr::Or(lhs, rhs) => run_fn(or_descriptor(), &[lhs, rhs], state),
             Expr::Xor(lhs, rhs) => run_fn(xor_descriptor(), &[lhs, rhs], state),
 
-            Expr::Block(block) => Ok(execute_block(block, &state)),
+            Expr::Block(block) => Ok(execute_block(block, state)),
+            Expr::If(cond, if_block, elifs, else_block) => {
+                let cond = cond.eval(state)?;
+
+                if let Data::Bool(b) = cond {
+                    if b {
+                        Ok(execute_block(if_block, state))
+                    } else {
+                        for (cond, block) in elifs {
+                            let cond = cond.eval(state)?;
+                            if let Data::Bool(b) = cond {
+                                if b {
+                                    return Ok(execute_block(block, state));
+                                }
+                            } else {
+                                return Err(ExprError::InvalidDataType {
+                                    expected: "Bool".to_string(),
+                                    found: cond._type().to_string(),
+                                    loc: "if condition".to_string(),
+                                });
+                            }
+                        }
+
+                        if let Some(block) = else_block {
+                            Ok(execute_block(block, state))
+                        } else {
+                            Ok(Data::Null)
+                        }
+                    }
+                } else {
+                    Err(ExprError::InvalidDataType {
+                        expected: "Bool".to_string(),
+                        found: cond._type().to_string(),
+                        loc: "if condition".to_string(),
+                    })
+                }
+            }
 
             Expr::Function(name, inputs) => {
                 if let Some(func) = state.builtins.get(name) {
@@ -146,17 +201,21 @@ impl Expr {
                     Err(ExprError::FunctionNotFound { name: name.clone() })
                 }
             }
-            Expr::Variable(name) => state
-                .variables
-                .get(name)
-                .ok_or(ExprError::VariableNotFound { name: name.clone() })
-                .copied(),
+            Expr::Variable(name) => {
+                if let Some(v) = state.variables.get(name) {
+                    Ok(v.clone())
+                } else if let Some(v) = state.constants.get(name) {
+                    Ok(v.clone())
+                } else {
+                    Err(ExprError::VariableNotFound { name: name.clone() })
+                }
+            }
             Expr::VariableDeclaration(name, value) => {
                 let value = value.eval(state)?;
 
                 state.variables.insert(name.clone(), value);
 
-                Ok(value)
+                Ok(Data::Null)
             }
         }
     }
@@ -174,3 +233,88 @@ impl Expr {
 //         Box::new(self.clone())
 //     }
 // }
+//
+
+impl Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Bool(b) => format!("{b}"),
+                Self::Num(n) => format!("{n}"),
+                Self::Null => "null".into(),
+                Self::String(s) => format!("\"{s}\""),
+                Self::Array(a) => format_vec(a),
+
+                Self::Neg(e) => format!("(-{e})"),
+                Self::Add(l, r) => format!("({l} + {r})"),
+                Self::Sub(l, r) => format!("({l} - {r})"),
+                Self::Mul(l, r) => format!("({l} * {r})"),
+                Self::Div(l, r) => format!("({l} / {r})"),
+                Self::Mod(l, r) => format!("({l} % {r})"),
+
+                Self::Ge(l, r) => format!("({l} >= {r})"),
+                Self::Gt(l, r) => format!("({l} > {r})"),
+                Self::Le(l, r) => format!("({l} <= {r})"),
+                Self::Lt(l, r) => format!("({l} < {r})"),
+                Self::Eq(l, r) => format!("({l} == {r})"),
+                Self::Ne(l, r) => format!("({l} != {r})"),
+
+                Self::And(l, r) => format!("({l} && {r})"),
+                Self::Or(l, r) => format!("({l} || {r})"),
+                Self::Xor(l, r) => format!("({l} ^ {r})"),
+                Self::Not(e) => format!("!{e}"),
+
+                Self::If(cond, if_block, elif_blocks, else_block) => format!(
+                    "if ({cond}) {} {} {}",
+                    format_block(if_block),
+                    elif_blocks
+                        .iter()
+                        .map(|(cond, block)| format!("elif ({}) {}", cond, format_block(block)))
+                        .collect::<String>(),
+                    if let Some(block) = else_block {
+                        format!("else {}", format_block(block))
+                    } else {
+                        String::new()
+                    }
+                ),
+
+                Self::Block(exps) => format_block(exps),
+
+                Self::Variable(name) => name.to_string(),
+                Self::VariableDeclaration(name, value) => format!("let {name} := {value}"),
+                Self::Function(name, inputs) => {
+                    let mut s = name.clone();
+
+                    write!(s, "(").unwrap();
+
+                    for (i, arg) in inputs.iter().enumerate() {
+                        if i != inputs.len() - 1 {
+                            write!(s, "{}, ", arg).unwrap();
+                        } else {
+                            write!(s, "{arg}").unwrap();
+                        }
+                    }
+
+                    write!(s, ")").unwrap();
+
+                    s
+                }
+            }
+        )
+    }
+}
+
+pub fn format_block(block: &[Expr]) -> String {
+    format!(
+        "{{\n{}}}",
+        indent(
+            &block
+                .iter()
+                .map(|e| e.display())
+                .collect::<Vec<String>>()
+                .join("\n")
+        )
+    )
+}

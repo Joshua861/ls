@@ -1,7 +1,5 @@
 use thiserror::Error;
 
-use crate::data::DataType;
-
 #[derive(Debug, Error)]
 pub enum ExprError {
     #[error("Attempted to divide by 0.")]
@@ -19,6 +17,13 @@ pub enum ExprError {
     #[error("Variable {name} does not exist. Has it been declared?")]
     VariableNotFound { name: String },
 
-    #[error("Invalid data type. Expected `{expected}`, found `{found}`.")]
-    InvalidDataType { expected: String, found: String },
+    #[error("Invalid data type found in {loc}. Expected `{expected}`, found `{found}`.")]
+    InvalidDataType {
+        expected: String,
+        found: String,
+        loc: String,
+    },
+
+    #[error("Failed to parse regex: {0}")]
+    InvalidRegex(String),
 }

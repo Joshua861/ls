@@ -1,5 +1,3 @@
-use std::fmt::{Display, Write};
-
 use ariadne::{Color, Label, Report, ReportKind, Source};
 use chumsky::{
     error::Simple,
@@ -10,11 +8,10 @@ use chumsky::{
 use crate::{
     expr::Expr,
     lexer::Token,
-    utils::strings::{indent, DotDebug, DotDisplay},
+    utils::strings::{DotDebug, DotDisplay},
 };
 
 pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
-    // Define `expr` and `statement` in recursive closures.
     let statement = recursive(|stmt| {
         let expr = recursive(|p| {
             let parenthesized = p
@@ -26,12 +23,16 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
             };
 
             let negative_integer = just(Token::Minus)
-                .then(integer.clone())
+                .then(integer)
                 .map(|(_minus, expr)| Expr::Neg(Box::new(expr)));
 
             let bool = select! {
                 Token::True => Expr::Bool(true),
                 Token::False => Expr::Bool(false),
+            };
+
+            let string = select! {
+                Token::String(s) => Expr::String(s),
             };
 
             let variable = select! {
@@ -49,19 +50,67 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
             )
             .map(|(name, args)| Expr::Function(name, args));
 
-            // Block parser
             let block = just(Token::BlockStart)
                 .ignore_then(stmt.clone().repeated())
-                .then_ignore(just(Token::BlockEnd))
-                .map(Expr::Block);
+                .then_ignore(just(Token::BlockEnd));
+
+            let if_block = just(Token::If)
+                .then(parenthesized.clone())
+                .then(block.clone())
+                .then(
+                    just(Token::ElseIf)
+                        .then(parenthesized.clone())
+                        .then(block.clone())
+                        .repeated(),
+                )
+                .then(just(Token::Else).then(block.clone()).or_not())
+                .map(|((((_, cond), if_block), elifs), else_block)| {
+                    Expr::If(
+                        Box::new(cond),
+                        if_block,
+                        elifs
+                            .iter()
+                            .map(|((_, cond), block)| (cond.clone(), block.clone()))
+                            .collect::<Vec<_>>(),
+                        else_block.map(|(_, block)| block),
+                    )
+                });
+
+            let block = block.map(Expr::Block);
+
+            let array = p
+                .clone()
+                .separated_by(just(Token::Comma))
+                .allow_trailing()
+                .delimited_by(just(Token::ArrayStart), just(Token::ArrayEnd))
+                .map(Expr::Array);
 
             let atom = block
                 .or(parenthesized)
                 .or(integer)
                 .or(negative_integer)
                 .or(bool)
-                .or(function)
-                .or(variable);
+                .or(function.clone())
+                .or(variable)
+                .or(if_block)
+                .or(array)
+                .or(string);
+
+            let atom = atom
+                .clone()
+                .then(just(Token::Dot).ignore_then(function).repeated())
+                .map(|(initial, method_calls)| {
+                    method_calls
+                        .into_iter()
+                        .fold(initial, |acc, method| match method {
+                            Expr::Function(name, mut args) => {
+                                let mut new_args = vec![acc];
+                                new_args.append(&mut args);
+                                Expr::Function(name, new_args)
+                            }
+                            _ => unreachable!(),
+                        })
+                });
 
             let not = just(Token::Not)
                 .then(atom.clone())
@@ -80,7 +129,7 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                         .then(unary)
                         .repeated(),
                 )
-                .foldl(|lhs, (op, rhs)| match op {
+                .foldl(|rhs, (op, lhs)| match op {
                     Token::Multiply => Expr::Mul(Box::new(lhs), Box::new(rhs)),
                     Token::Divide => Expr::Div(Box::new(lhs), Box::new(rhs)),
                     Token::Modulo => Expr::Mod(Box::new(lhs), Box::new(rhs)),
@@ -173,66 +222,4 @@ pub fn print_parser_error(err: Simple<Token>, source: &[Token]) {
                 .collect::<String>(),
         ))
         .unwrap();
-}
-
-impl Display for Expr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::Bool(b) => format!("{b}"),
-                Self::Num(n) => format!("{n}"),
-                Self::Null => "null".into(),
-
-                Self::Neg(e) => format!("(-{e})"),
-                Self::Add(l, r) => format!("({l} + {r})"),
-                Self::Sub(l, r) => format!("({l} - {r})"),
-                Self::Mul(l, r) => format!("({l} * {r})"),
-                Self::Div(l, r) => format!("({l} / {r})"),
-                Self::Mod(l, r) => format!("({l} % {r})"),
-                Self::Ge(l, r) => format!("({l} >= {r})"),
-                Self::Gt(l, r) => format!("({l} > {r})"),
-                Self::Le(l, r) => format!("({l} <= {r})"),
-                Self::Lt(l, r) => format!("({l} < {r})"),
-                Self::Eq(l, r) => format!("({l} == {r})"),
-                Self::Ne(l, r) => format!("({l} != {r})"),
-                Self::And(l, r) => format!("({l} && {r})"),
-                Self::Or(l, r) => format!("({l} || {r})"),
-                Self::Xor(l, r) => format!("({l} ^ {r})"),
-                Self::Not(e) => format!("!{e}"),
-
-                Self::Block(exps) => format!(
-                    "{{\n{}}}",
-                    indent(
-                        &exps
-                            .iter()
-                            .map(|e| e.display())
-                            .collect::<Vec<String>>()
-                            .join("\n")
-                    )
-                ),
-
-                Self::Variable(name) => name.to_string(),
-                Self::VariableDeclaration(name, value) => format!("let {name} := {value}"),
-                Self::Function(name, inputs) => {
-                    let mut s = name.clone();
-
-                    write!(s, "(").unwrap();
-
-                    for (i, arg) in inputs.iter().enumerate() {
-                        if i != inputs.len() - 1 {
-                            write!(s, "{}, ", arg).unwrap();
-                        } else {
-                            write!(s, "{arg}").unwrap();
-                        }
-                    }
-
-                    write!(s, ")").unwrap();
-
-                    s
-                }
-            }
-        )
-    }
 }

@@ -2,7 +2,7 @@ use std::{env, fs, process::exit};
 
 use chumsky::Parser;
 use data::Data;
-use expr::{ExecutionState, Expr};
+use expr::{format_block, ExecutionState, Expr};
 use lexer::Token;
 use logos::Logos;
 use parser::{parser, print_parser_error};
@@ -14,6 +14,7 @@ mod functions;
 mod lexer;
 // rip
 // mod number;
+mod constants;
 mod parser;
 mod utils;
 
@@ -66,7 +67,7 @@ pub fn execute_block(block: &[Expr], state: &ExecutionState) -> Data {
     for e in block {
         match e.eval(&mut inner_state) {
             Ok(result) => {
-                println!("{} = {}", e, result);
+                // println!("{}", e);
                 output = result;
             }
             Err(e) => {
@@ -93,6 +94,12 @@ fn run(input: &str) -> (Vec<Token>, Vec<Expr>, Data) {
         }
     }
 
+    let tokens = tokens
+        .iter()
+        .filter(|t| !t.is_comment())
+        .cloned()
+        .collect::<Vec<_>>();
+
     let expressions = match parser().parse(tokens.clone()) {
         Ok(expr) => {
             println!("[AST]\n{}", indent(&expr.debug()));
@@ -105,6 +112,10 @@ fn run(input: &str) -> (Vec<Token>, Vec<Expr>, Data) {
             exit(1);
         }
     };
+
+    println!("{}", format_block(&expressions));
+
+    println!("\n---Execution---\n");
 
     let exec_state = ExecutionState::new();
     let output = execute_block(&expressions, &exec_state);

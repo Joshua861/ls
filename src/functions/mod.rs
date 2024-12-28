@@ -6,6 +6,15 @@ pub use numeric::*;
 mod boolean;
 pub use boolean::*;
 
+mod other;
+pub use other::*;
+
+mod string;
+pub use string::*;
+
+mod array;
+pub use array::*;
+
 use crate::{
     data::{Data, DataType},
     expr::EResult,
@@ -40,6 +49,9 @@ pub fn builtints() -> FunctionMap {
         ("mul", mul_descriptor()),
         ("neg", neg_descriptor()),
         ("mod", mod_descriptor()),
+        ("round", round_descriptor()),
+        ("ceil", ceil_descriptor()),
+        ("floor", floor_descriptor()),
         // boolean
         ("or", or_descriptor()),
         ("and", and_descriptor()),
@@ -51,6 +63,49 @@ pub fn builtints() -> FunctionMap {
         ("le", le_descriptor()),
         ("gt", gt_descriptor()),
         ("lt", lt_descriptor()),
+        // string
+        ("join", join_descriptor()),
+        ("string", string_descriptor()),
+        ("center", center_descriptor()),
+        ("count", count_descriptor()),
+        ("ends_with", ends_with_descriptor()),
+        ("starts_with", starts_with_descriptor()),
+        ("find", find_descriptor()),
+        ("is_numeric", is_numeric_descriptor()),
+        ("is_alphanumeric", is_alphanumeric_descriptor()),
+        ("is_alphabetic", is_alphabetic_descriptor()),
+        ("is_ascii", is_ascii_descriptor()),
+        ("matches", matches_descriptor()),
+        ("is_lowercase", is_lowercase_descriptor()),
+        ("is_uppercase", is_uppercase_descriptor()),
+        ("is_whitespace", is_whitespace_descriptor()),
+        ("trim", trim_descriptor()),
+        ("replace", replace_descriptor()),
+        ("split", split_descriptor()),
+        ("uppercase", uppercase_descriptor()),
+        ("lowercase", lowercase_descriptor()),
+        ("upper_camel_case", upper_camel_case_descriptor()),
+        ("lower_camel_case", lower_camel_case_descriptor()),
+        ("snake_case", snake_case_descriptor()),
+        ("kebab_case", kebab_case_descriptor()),
+        ("shouty_kebab_case", shouty_kebab_case_descriptor()),
+        ("shouty_snake_case", shouty_snake_case_descriptor()),
+        ("title_case", title_case_descriptor()),
+        ("train_case", train_case_descriptor()),
+        // array
+        ("join_array", join_array_descriptor()),
+        ("sort", sort_descriptor()),
+        ("length", length_descriptor()),
+        ("index", index_descriptor()),
+        ("append", append_descriptor()),
+        ("flatten", flatten_descriptor()),
+        ("extend", extend_descriptor()),
+        ("reverse", reverse_descriptor()),
+        ("without", without_descriptor()),
+        ("with_insert", with_insert_descriptor()),
+        ("type", type_of_descriptor()),
+        // other
+        ("print", print_descriptor()),
     ] {
         map.insert(name.to_string(), descriptor);
     }

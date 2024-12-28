@@ -6,9 +6,11 @@ edition = "2021"
 [dependencies]
 ariadne = { version = "0.5.0", features = ["auto-color"] }
 chumsky = "0.9.3"
+heck = "0.5.0"
 logos = "0.15.0"
 rand = "0.8.5"
-rust_decimal = "1.36.0"
+regex = "1.11.1"
+rust_decimal = { version = "1.36.0", features = ["maths"] }
 rust_decimal_macros = "1.36.0"
 strum = { version = "0.26.3", features = ["derive"] }
 strum_macros = "0.26.4"
