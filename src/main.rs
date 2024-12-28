@@ -60,7 +60,7 @@ fn main() {
     }
 }
 
-pub fn execute_block(block: &[Expr], state: &ExecutionState) -> Data {
+pub fn execute_block(block: &[Expr], state: &ExecutionState) -> (Data, ExecutionState) {
     let mut inner_state = state.clone();
     let mut output = Data::Null;
 
@@ -77,7 +77,7 @@ pub fn execute_block(block: &[Expr], state: &ExecutionState) -> Data {
         }
     }
 
-    output
+    (output, inner_state)
 }
 
 fn run(input: &str) -> (Vec<Token>, Vec<Expr>, Data) {
@@ -120,7 +120,7 @@ fn run(input: &str) -> (Vec<Token>, Vec<Expr>, Data) {
     let exec_state = ExecutionState::new();
     let output = execute_block(&expressions, &exec_state);
 
-    (tokens, expressions, output)
+    (tokens, expressions, output.0)
 }
 
 #[cfg(test)]

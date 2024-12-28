@@ -41,6 +41,12 @@ impl ExecutionState {
     }
 }
 
+impl Default for ExecutionState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 type BExpr = Box<Expr>;
 
 #[derive(Debug, Clone)]
@@ -77,6 +83,8 @@ pub enum Expr {
     Variable(String),
 
     If(BExpr, Vec<Expr>, Vec<(Expr, Vec<Expr>)>, Option<Vec<Expr>>),
+    For(String, BExpr, Vec<Expr>),
+    While(BExpr, Vec<Expr>),
 }
 
 pub type EResult<T> = Result<T, ExprError>;
@@ -155,19 +163,19 @@ impl Expr {
             Expr::Or(lhs, rhs) => run_fn(or_descriptor(), &[lhs, rhs], state),
             Expr::Xor(lhs, rhs) => run_fn(xor_descriptor(), &[lhs, rhs], state),
 
-            Expr::Block(block) => Ok(execute_block(block, state)),
+            Expr::Block(block) => Ok(execute_block(block, state).0),
             Expr::If(cond, if_block, elifs, else_block) => {
                 let cond = cond.eval(state)?;
 
                 if let Data::Bool(b) = cond {
                     if b {
-                        Ok(execute_block(if_block, state))
+                        Ok(execute_block(if_block, state).0)
                     } else {
                         for (cond, block) in elifs {
                             let cond = cond.eval(state)?;
                             if let Data::Bool(b) = cond {
                                 if b {
-                                    return Ok(execute_block(block, state));
+                                    return Ok(execute_block(block, state).0);
                                 }
                             } else {
                                 return Err(ExprError::InvalidDataType {
@@ -179,7 +187,7 @@ impl Expr {
                         }
 
                         if let Some(block) = else_block {
-                            Ok(execute_block(block, state))
+                            Ok(execute_block(block, state).0)
                         } else {
                             Ok(Data::Null)
                         }
@@ -189,6 +197,48 @@ impl Expr {
                         expected: "Bool".to_string(),
                         found: cond._type().to_string(),
                         loc: "if condition".to_string(),
+                    })
+                }
+            }
+
+            Expr::While(cond, block) => {
+                let initial_state = state.clone();
+                let mut inner_state = state.clone();
+
+                let is_true = |data| {
+                    if let Data::Bool(b) = data {
+                        b
+                    } else {
+                        false
+                    }
+                };
+
+                while is_true(cond.eval(&mut inner_state)?) {
+                    let (_, s) = execute_block(block, &inner_state);
+                    inner_state = s;
+                }
+
+                *state = initial_state;
+
+                Ok(Data::Null)
+            }
+            Expr::For(var_name, maybe_array, block) => {
+                let maybe_array = maybe_array.eval(state)?;
+
+                if let Data::Array(array) = maybe_array {
+                    for data in array {
+                        let mut inner_state = state.clone();
+                        inner_state.variables.insert(var_name.clone(), data);
+
+                        execute_block(block, &inner_state);
+                    }
+
+                    Ok(Data::Null)
+                } else {
+                    Err(ExprError::InvalidDataType {
+                        expected: "Array".to_string(),
+                        found: maybe_array._type().to_string(),
+                        loc: "for loop input".to_string(),
                     })
                 }
             }
@@ -265,6 +315,10 @@ impl Display for Expr {
                 Self::Or(l, r) => format!("({l} || {r})"),
                 Self::Xor(l, r) => format!("({l} ^ {r})"),
                 Self::Not(e) => format!("!{e}"),
+
+                Self::While(cond, block) => format!("while {cond} {}", format_block(block)),
+                Self::For(name, array, block) =>
+                    format!("for {name} in {array} {}", format_block(block)),
 
                 Self::If(cond, if_block, elif_blocks, else_block) => format!(
                     "if ({cond}) {} {} {}",

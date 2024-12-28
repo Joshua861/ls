@@ -143,6 +143,24 @@ pub enum Token {
 
     #[token("elif")]
     ElseIf,
+
+    #[token("while")]
+    While,
+
+    #[token("for")]
+    For,
+
+    #[token("in")]
+    In,
+
+    #[token("fn")]
+    Fn,
+
+    #[token("->")]
+    Arrow,
+
+    #[token(":")]
+    Colon,
 }
 
 fn rem_first_and_last(value: String) -> String {
@@ -167,7 +185,6 @@ impl Display for Token {
                 Self::Number(n) => n.display(),
                 Self::String(s) => s,
                 Self::Ident(s) => s.clone(),
-                Self::Eol => ";".into(),
 
                 Self::Let => "let ".into(),
                 Self::AssignTo => ":=".into(),
@@ -195,10 +212,17 @@ impl Display for Token {
                 Self::RParen => ")".into(),
                 Self::Comma => ",".into(),
                 Self::Dot => ".".into(),
+                Self::Arrow => "->".into(),
+                Self::Colon => ":".into(),
+                Self::Eol => ";".into(),
 
                 Self::If => "if".into(),
                 Self::Else => "else".into(),
                 Self::ElseIf => "elif".into(),
+                Self::For => "for".into(),
+                Self::While => "while".into(),
+                Self::In => "in".into(),
+                Self::Fn => "fn".into(),
 
                 Self::Comment(s) => s,
             },

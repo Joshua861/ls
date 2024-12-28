@@ -166,3 +166,17 @@ pub fn with_insert_descriptor() -> FunctionDescriptor {
         output: DataType::Array,
     }
 }
+
+fn range(i: Input) -> Output {
+    ((i[0].number().to_usize().unwrap())..(i[1].number().to_usize().unwrap()))
+        .collect::<Vec<_>>()
+        .data()
+}
+
+pub fn range_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number, DataType::Number],
+        function: range,
+        output: DataType::Array,
+    }
+}

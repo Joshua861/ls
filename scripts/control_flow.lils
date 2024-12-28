@@ -1,11 +1,11 @@
 let r := rand() * 100;
 
-let y := if (r > 80) {
+let y := if r > 80 {
   18;
-} elif (r > 50) {
+} elif r > 50 {
   10;
 } else {
   0;
 };
 
-join("[", y.string().join("]")).center(20, "-").print(); // --------[18]--------
+y.string().surround("[", "]").center(20, "-").print();

@@ -13,6 +13,10 @@ use crate::{
 
 pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
     let statement = recursive(|stmt| {
+        let block = just(Token::BlockStart)
+            .ignore_then(stmt.clone().repeated())
+            .then_ignore(just(Token::BlockEnd));
+
         let expr = recursive(|p| {
             let parenthesized = p
                 .clone()
@@ -50,16 +54,12 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
             )
             .map(|(name, args)| Expr::Function(name, args));
 
-            let block = just(Token::BlockStart)
-                .ignore_then(stmt.clone().repeated())
-                .then_ignore(just(Token::BlockEnd));
-
             let if_block = just(Token::If)
-                .then(parenthesized.clone())
+                .then(p.clone())
                 .then(block.clone())
                 .then(
                     just(Token::ElseIf)
-                        .then(parenthesized.clone())
+                        .then(p.clone())
                         .then(block.clone())
                         .repeated(),
                 )
@@ -76,7 +76,7 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                     )
                 });
 
-            let block = block.map(Expr::Block);
+            let block_mapped = block.clone().map(Expr::Block);
 
             let array = p
                 .clone()
@@ -85,7 +85,7 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                 .delimited_by(just(Token::ArrayStart), just(Token::ArrayEnd))
                 .map(Expr::Array);
 
-            let atom = block
+            let atom = block_mapped
                 .or(parenthesized)
                 .or(integer)
                 .or(negative_integer)
@@ -94,7 +94,8 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                 .or(variable)
                 .or(if_block)
                 .or(array)
-                .or(string);
+                .or(string)
+                .boxed();
 
             let atom = atom
                 .clone()
@@ -110,7 +111,8 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                             }
                             _ => unreachable!(),
                         })
-                });
+                })
+                .boxed();
 
             let not = just(Token::Not)
                 .then(atom.clone())
@@ -118,7 +120,8 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
             let unary = just(Token::Minus)
                 .repeated()
                 .then(atom.or(not))
-                .foldr(|_op, lhs| Expr::Neg(Box::new(lhs)));
+                .foldr(|_op, lhs| Expr::Neg(Box::new(lhs)))
+                .boxed();
 
             let binary_1 = unary
                 .clone()
@@ -134,7 +137,8 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                     Token::Divide => Expr::Div(Box::new(lhs), Box::new(rhs)),
                     Token::Modulo => Expr::Mod(Box::new(lhs), Box::new(rhs)),
                     _ => unreachable!(),
-                });
+                })
+                .boxed();
 
             let binary_2 = binary_1
                 .clone()
@@ -148,7 +152,8 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                     Token::Plus => Expr::Add(Box::new(lhs), Box::new(rhs)),
                     Token::Minus => Expr::Sub(Box::new(lhs), Box::new(rhs)),
                     _ => unreachable!(),
-                });
+                })
+                .boxed();
 
             let boolean_1 = binary_2
                 .clone()
@@ -186,20 +191,46 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                     Token::Or => Expr::Or(Box::new(lhs), Box::new(rhs)),
                     Token::Xor => Expr::Xor(Box::new(lhs), Box::new(rhs)),
                     _ => unreachable!(),
-                });
+                })
+                .boxed();
 
             #[allow(clippy::let_and_return)]
             boolean_2
         });
+
+        let while_loop = just(Token::While)
+            .ignore_then(expr.clone())
+            .then(block.clone())
+            .map(|(expr, block)| Expr::While(Box::new(expr), block))
+            .boxed();
+
+        let for_loop = just(Token::For)
+            .ignore_then(select! {Token::Ident(k) => k})
+            .then_ignore(just(Token::In))
+            .then(expr.clone())
+            .then(block.clone())
+            .map(|((name, expr), block)| Expr::For(name, Box::new(expr), block))
+            .boxed();
 
         let variable_declaration = just(Token::Let)
             .then(select! { Token::Ident(k) => k })
             .then_ignore(just(Token::AssignTo))
             .then(expr.clone())
             .map(|((_, name), value)| Expr::VariableDeclaration(name, Box::new(value)))
-            .then_ignore(just(Token::Eol));
+            .then_ignore(just(Token::Eol))
+            .boxed();
 
-        variable_declaration.or(expr.clone().then_ignore(just(Token::Eol)))
+        // let variable_change = select! { Token::Ident(k) => k }
+        //     .then_ignore(just(Token::AssignTo))
+        //     .then(expr.clone())
+        //     .then_ignore(just(Token::Eol))
+        //     .map(|(name, value)| Expr::VariableChange(name, Box::new(value)))
+        //     .boxed();
+
+        variable_declaration
+            .or(expr.clone().then_ignore(just(Token::Eol)))
+            .or(while_loop)
+            .or(for_loop)
     });
 
     statement.repeated().then_ignore(end())

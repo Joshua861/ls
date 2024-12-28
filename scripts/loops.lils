@@ -1,0 +1,11 @@
+let i := 0;
+
+while i < 10 {
+  let i := i + 1;
+
+  print(i);
+}
+
+for num in [102, 213, 5.5] {
+    print(num);
+}

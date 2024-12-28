@@ -35,6 +35,30 @@ pub fn join_descriptor() -> FunctionDescriptor {
     }
 }
 
+fn join_after(i: Input) -> Output {
+    format!("{}{}", i[1], i[0]).data()
+}
+
+pub fn join_after_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Any, DataType::Any],
+        function: join_after,
+        output: DataType::String,
+    }
+}
+
+fn surround(i: Input) -> Output {
+    format!("{}{}{}", i[1], i[0], i[2]).data()
+}
+
+pub fn surround_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Any, DataType::Any, DataType::Any],
+        function: surround,
+        output: DataType::String,
+    }
+}
+
 fn uppercase(i: Input) -> Output {
     i[0].string().to_uppercase().data()
 }

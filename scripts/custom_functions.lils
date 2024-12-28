@@ -1,0 +1,3 @@
+fn section(s: String) -> Null {
+    s.surround("[", "]").center(30, "-").print()
+}

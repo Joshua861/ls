@@ -65,6 +65,8 @@ pub fn builtints() -> FunctionMap {
         ("lt", lt_descriptor()),
         // string
         ("join", join_descriptor()),
+        ("join_after", join_after_descriptor()),
+        ("surround", surround_descriptor()),
         ("string", string_descriptor()),
         ("center", center_descriptor()),
         ("count", count_descriptor()),
@@ -103,8 +105,9 @@ pub fn builtints() -> FunctionMap {
         ("reverse", reverse_descriptor()),
         ("without", without_descriptor()),
         ("with_insert", with_insert_descriptor()),
-        ("type", type_of_descriptor()),
+        ("range", range_descriptor()),
         // other
+        ("type", type_of_descriptor()),
         ("print", print_descriptor()),
     ] {
         map.insert(name.to_string(), descriptor);

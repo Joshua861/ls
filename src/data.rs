@@ -1,7 +1,7 @@
 use std::fmt::{Display, Write};
 
 use rust_decimal::Decimal;
-use strum::EnumIs;
+use strum::{EnumIs, EnumString, VariantArray};
 
 use crate::{expr::EResult, utils::strings::DotDisplay};
 
@@ -32,7 +32,7 @@ impl Display for Data {
     }
 }
 
-#[derive(Clone, Debug, Copy, PartialEq, EnumIs)]
+#[derive(Clone, Debug, Copy, PartialEq, EnumIs, VariantArray, EnumString)]
 pub enum DataType {
     Number,
     Bool,
@@ -135,6 +135,19 @@ impl ToData for isize {
 impl ToData for &str {
     fn data(self) -> EResult<Data> {
         Ok(Data::String(self.to_string()))
+    }
+}
+
+impl<T> ToData for Vec<T>
+where
+    T: ToData,
+{
+    fn data(self) -> EResult<Data> {
+        Ok(Data::Array(
+            self.into_iter()
+                .map(|t| t.data())
+                .collect::<EResult<Vec<_>>>()?,
+        ))
     }
 }
 
