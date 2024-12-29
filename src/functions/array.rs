@@ -1,6 +1,7 @@
 use super::{FunctionDescriptor, FunctionType, Input, Output};
 use crate::{
     data::{Data, DataType, ToData},
+    expr::error::ExprError,
     utils::strings::DotDisplay,
 };
 use rust_decimal::prelude::ToPrimitive;
@@ -178,5 +179,35 @@ pub fn range_descriptor() -> FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
         function: FunctionType::BuiltIn(range),
         output: DataType::Array,
+    }
+}
+
+fn max_array(i: Input) -> Output {
+    let mut a = i[0].array();
+    a.sort();
+
+    a.pop().ok_or(ExprError::ArrayIsEmpty)
+}
+
+pub fn max_array_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Array],
+        function: FunctionType::BuiltIn(max_array),
+        output: DataType::Any,
+    }
+}
+
+fn min_array(i: Input) -> Output {
+    let mut a = i[0].array();
+    a.sort();
+    a.reverse();
+    a.pop().ok_or(ExprError::ArrayIsEmpty)
+}
+
+pub fn min_array_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Array],
+        function: FunctionType::BuiltIn(min_array),
+        output: DataType::Any,
     }
 }

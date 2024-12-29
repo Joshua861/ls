@@ -26,4 +26,7 @@ pub enum ExprError {
 
     #[error("Failed to parse regex: {0}")]
     InvalidRegex(String),
+
+    #[error("Array is empty.")]
+    ArrayIsEmpty,
 }

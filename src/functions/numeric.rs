@@ -239,3 +239,317 @@ pub fn round_descriptor() -> FunctionDescriptor {
         output: DataType::Number,
     }
 }
+
+fn pow(i: Input) -> Output {
+    let a = i[0].number();
+    let b = i[1].number();
+    Decimal::from_f64(a.to_f64().unwrap().powf(b.to_f64().unwrap()))
+        .unwrap()
+        .data()
+}
+
+pub fn pow_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number, DataType::Number],
+        function: FunctionType::BuiltIn(pow),
+        output: DataType::Number,
+    }
+}
+
+fn sign(i: Input) -> Output {
+    let a = i[0].number();
+    if a.is_zero() {
+        Decimal::ZERO
+    } else if a.is_sign_positive() {
+        Decimal::ONE
+    } else {
+        Decimal::NEGATIVE_ONE
+    }
+    .data()
+}
+
+pub fn sign_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(sign),
+        output: DataType::Number,
+    }
+}
+
+fn sin(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().sin()).unwrap().data()
+}
+
+pub fn sin_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(sin),
+        output: DataType::Number,
+    }
+}
+
+fn cos(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().cos()).unwrap().data()
+}
+
+pub fn cos_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(cos),
+        output: DataType::Number,
+    }
+}
+
+fn tan(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().tan()).unwrap().data()
+}
+
+pub fn tan_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(tan),
+        output: DataType::Number,
+    }
+}
+
+fn log(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().log10())
+        .unwrap()
+        .data()
+}
+
+pub fn log_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(log),
+        output: DataType::Number,
+    }
+}
+
+fn log2(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().log2())
+        .unwrap()
+        .data()
+}
+
+pub fn log2_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(log2),
+        output: DataType::Number,
+    }
+}
+
+fn log10(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().log10())
+        .unwrap()
+        .data()
+}
+
+pub fn log10_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(log10),
+        output: DataType::Number,
+    }
+}
+
+fn acos(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().acos())
+        .unwrap()
+        .data()
+}
+
+pub fn acos_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(acos),
+        output: DataType::Number,
+    }
+}
+
+fn acosh(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().acosh())
+        .unwrap()
+        .data()
+}
+
+pub fn acosh_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(acosh),
+        output: DataType::Number,
+    }
+}
+
+fn asin(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().asin())
+        .unwrap()
+        .data()
+}
+
+pub fn asin_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(asin),
+        output: DataType::Number,
+    }
+}
+
+fn asinh(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().asinh())
+        .unwrap()
+        .data()
+}
+
+pub fn asinh_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(asinh),
+        output: DataType::Number,
+    }
+}
+
+fn atan(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().atan())
+        .unwrap()
+        .data()
+}
+
+pub fn atan_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(atan),
+        output: DataType::Number,
+    }
+}
+
+fn atan2(i: Input) -> Output {
+    let a = i[0].number();
+    let b = i[1].number();
+    Decimal::from_f64(a.to_f64().unwrap().atan2(b.to_f64().unwrap()))
+        .unwrap()
+        .data()
+}
+
+pub fn atan2_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number, DataType::Number],
+        function: FunctionType::BuiltIn(atan2),
+        output: DataType::Number,
+    }
+}
+
+fn atanh(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().atanh())
+        .unwrap()
+        .data()
+}
+
+pub fn atanh_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(atanh),
+        output: DataType::Number,
+    }
+}
+
+fn cbrt(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().cbrt())
+        .unwrap()
+        .data()
+}
+
+pub fn cbrt_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(cbrt),
+        output: DataType::Number,
+    }
+}
+
+fn cosh(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().cosh())
+        .unwrap()
+        .data()
+}
+
+pub fn cosh_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(cosh),
+        output: DataType::Number,
+    }
+}
+
+fn exp(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().exp()).unwrap().data()
+}
+
+pub fn exp_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(exp),
+        output: DataType::Number,
+    }
+}
+
+fn sinh(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().sinh())
+        .unwrap()
+        .data()
+}
+
+pub fn sinh_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(sinh),
+        output: DataType::Number,
+    }
+}
+
+fn tanh(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().tanh())
+        .unwrap()
+        .data()
+}
+
+pub fn tanh_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(tanh),
+        output: DataType::Number,
+    }
+}
+
+fn trunc(i: Input) -> Output {
+    let a = i[0].number();
+    Decimal::from_f64(a.to_f64().unwrap().trunc())
+        .unwrap()
+        .data()
+}
+
+pub fn trunc_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Number],
+        function: FunctionType::BuiltIn(trunc),
+        output: DataType::Number,
+    }
+}

@@ -44,7 +44,7 @@ pub fn type_of_descriptor() -> FunctionDescriptor {
     }
 }
 
-fn input(i: Input) -> Output {
+fn input(_i: Input) -> Output {
     let mut input = String::new();
     std::io::stdin().read_line(&mut input).unwrap();
 
