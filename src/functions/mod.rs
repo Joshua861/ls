@@ -15,6 +15,9 @@ pub use string::*;
 mod array;
 pub use array::*;
 
+mod higher_order;
+pub use higher_order::*;
+
 use crate::{
     data::{Data, DataType},
     expr::{EResult, Expr},
@@ -24,14 +27,14 @@ pub type Input = Vec<Data>;
 pub type Output = EResult<Data>;
 pub type FunctionMap = HashMap<String, FunctionDescriptor>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FunctionDescriptor {
     pub inputs: Vec<DataType>,
     pub function: FunctionType,
     pub output: DataType,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FunctionType {
     BuiltIn(fn(Input) -> Output),
     Custom(Vec<Expr>, Vec<String>),
@@ -80,6 +83,7 @@ pub fn builtints() -> FunctionMap {
         ("asinh", asinh_descriptor()),
         ("acos", acos_descriptor()),
         ("acosh", acosh_descriptor()),
+        ("parse_number", parse_to_number_descriptor()),
         // boolean
         ("or", or_descriptor()),
         ("and", and_descriptor()),
@@ -136,6 +140,15 @@ pub fn builtints() -> FunctionMap {
         ("range", range_descriptor()),
         ("max_array", max_array_descriptor()),
         ("min_array", min_array_descriptor()),
+        ("first", first_descriptor()),
+        ("last", last_descriptor()),
+        // higher order
+        ("map", map_descriptor()),
+        ("for_each", for_each_descriptor()),
+        ("filter", filter_descriptor()),
+        // ("reduce", reduce_descriptor()),
+        ("fold", fold_descriptor()),
+        // ("zip", zip_descriptor()),
         // other
         ("type", type_of_descriptor()),
         ("print", print_descriptor()),

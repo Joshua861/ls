@@ -3,7 +3,7 @@ use std::fmt::{Display, Write};
 use rust_decimal::Decimal;
 use strum::{EnumIs, EnumString, VariantArray};
 
-use crate::{expr::EResult, utils::strings::DotDisplay};
+use crate::{expr::EResult, functions::FunctionDescriptor, utils::strings::DotDisplay};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Data {
@@ -12,6 +12,7 @@ pub enum Data {
     String(String),
     Null,
     Array(Vec<Data>),
+    Function(FunctionDescriptor),
     // Function(String),
     // Array(Array),
 }
@@ -27,12 +28,15 @@ impl Display for Data {
                 Self::Null => "null".into(),
                 Self::String(s) => s.clone(),
                 Self::Array(a) => format_vec(a),
+                Self::Function(f) => {
+                    format!("fn({}) -> {}", format_types(f.inputs.clone()), f.output)
+                }
             }
         )
     }
 }
 
-#[derive(Clone, Debug, Copy, PartialEq, EnumIs, VariantArray, EnumString)]
+#[derive(Clone, Debug, Copy, PartialEq, EnumIs, VariantArray, EnumString, Eq)]
 pub enum DataType {
     Number,
     Bool,
@@ -40,6 +44,7 @@ pub enum DataType {
     Any,
     String,
     Array,
+    Function,
 }
 
 impl Data {
@@ -50,6 +55,7 @@ impl Data {
             Data::Null => DataType::Null,
             Data::String(_) => DataType::String,
             Data::Array(_) => DataType::Array,
+            Data::Function(_) => DataType::Function,
         }
     }
 
@@ -82,6 +88,22 @@ impl Data {
         match self {
             Data::Array(a) => a.clone(),
             _ => unreachable!(),
+        }
+    }
+
+    /// USE WITH CAUTION: panics if input type is not function!!!
+    pub fn function(&self) -> &FunctionDescriptor {
+        match self {
+            Data::Function(f) => f,
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn is_true(&self) -> bool {
+        if let Data::Bool(b) = self {
+            *b
+        } else {
+            false
         }
     }
 }
@@ -135,6 +157,12 @@ impl ToData for isize {
 impl ToData for &str {
     fn data(self) -> EResult<Data> {
         Ok(Data::String(self.to_string()))
+    }
+}
+
+impl ToData for &Data {
+    fn data(self) -> EResult<Data> {
+        Ok(self.clone())
     }
 }
 

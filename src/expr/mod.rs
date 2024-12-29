@@ -27,8 +27,8 @@ pub type VariableMap = HashMap<String, Data>;
 #[derive(Debug, Clone)]
 pub struct ExecutionState {
     pub functions: FunctionMap,
-    variables: VariableMap,
-    constants: VariableMap,
+    pub variables: VariableMap,
+    pub constants: VariableMap,
 }
 
 impl ExecutionState {
@@ -49,12 +49,13 @@ impl Default for ExecutionState {
 
 type BExpr = Box<Expr>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Expr {
     Num(Decimal),
     Bool(bool),
     String(String),
     Array(Vec<Expr>),
+    FunctionValue(FunctionDescriptor),
     Null,
 
     Neg(BExpr),
@@ -90,14 +91,10 @@ pub enum Expr {
 
 pub type EResult<T> = Result<T, ExprError>;
 
+#[macro_export]
 macro_rules! run {
     ($func: ident, $inputs: ident, $state: ident) => {{
-        let inputs = $inputs
-            .iter()
-            .map(|e| e.eval($state))
-            .collect::<Result<Vec<_>, _>>()?;
-
-        let matching_types = inputs
+        let matching_types = $inputs
             .iter()
             .map(|i| i._type())
             .zip($func.inputs.iter())
@@ -105,19 +102,19 @@ macro_rules! run {
 
         if matching_types {
             Ok(match $func.function {
-                FunctionType::BuiltIn(f) => f(inputs)?,
+                FunctionType::BuiltIn(f) => f($inputs)?,
                 FunctionType::Custom(block, input_names) => {
                     let mut state = ExecutionState::new();
 
                     for (i, name) in input_names.iter().enumerate() {
-                        state.variables.insert(name.clone(), inputs[i].clone());
+                        state.variables.insert(name.clone(), $inputs[i].clone());
                     }
 
                     execute_block(&block, &state).0
                 }
             })
         } else {
-            let input_types = inputs.iter().map(|i| i._type()).collect::<Vec<_>>();
+            let input_types = $inputs.iter().map(|i| i._type()).collect::<Vec<_>>();
             Err(ExprError::InvalidFunctionArguements {
                 expected: format_types($func.inputs),
                 found: format_types(input_types),
@@ -127,19 +124,29 @@ macro_rules! run {
     }};
 }
 
-fn run_fn(
+pub fn run_fn(
     func: FunctionDescriptor,
     inputs: &[&BExpr],
     state: &mut ExecutionState,
 ) -> EResult<Data> {
+    let inputs = inputs
+        .iter()
+        .map(|e| e.eval(state))
+        .collect::<Result<Vec<_>, _>>()?;
+
     run!(func, inputs, state)
 }
 
-fn run_fn_owned(
+pub fn run_fn_owned(
     func: FunctionDescriptor,
     inputs: &[Expr],
     state: &mut ExecutionState,
 ) -> EResult<Data> {
+    let inputs = inputs
+        .iter()
+        .map(|e| e.eval(state))
+        .collect::<Result<Vec<_>, _>>()?;
+
     run!(func, inputs, state)
 }
 
@@ -155,6 +162,7 @@ impl Expr {
                     .map(|e| e.eval(state))
                     .collect::<EResult<Vec<_>>>()?,
             )),
+            Expr::FunctionValue(f) => Ok(Data::Function(f.clone())),
 
             Expr::Neg(n) => run_fn(neg_descriptor(), &[n], state),
             Expr::Add(lhs, rhs) => run_fn(add_descriptor(), &[lhs, rhs], state),
@@ -369,7 +377,10 @@ impl Display for Expr {
                     s
                 }
 
-                Self::FunctionDeclaration(name, block) => {
+                Self::FunctionDeclaration(_name, _block) => {
+                    todo!()
+                }
+                Self::FunctionValue(_) => {
                     todo!()
                 }
             }
@@ -402,6 +413,7 @@ impl Expr {
             Expr::Null => DataType::Null,
             Expr::Variable(_) => DataType::Any,
             Expr::Function(name, _) => state.functions.get(name).map(|f| f.output).unwrap(),
+            Expr::FunctionValue(f) => f.output,
             Expr::FunctionDeclaration(_, _) => DataType::Null,
             Expr::Array(_) => DataType::Array,
             Expr::Block(block) => block.last().unwrap().data_type(state),

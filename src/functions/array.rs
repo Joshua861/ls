@@ -211,3 +211,27 @@ pub fn min_array_descriptor() -> FunctionDescriptor {
         output: DataType::Any,
     }
 }
+
+fn first(i: Input) -> Output {
+    i[0].array().first().cloned().ok_or(ExprError::ArrayIsEmpty)
+}
+
+pub fn first_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Array],
+        function: FunctionType::BuiltIn(first),
+        output: DataType::Any,
+    }
+}
+
+fn last(i: Input) -> Output {
+    i[0].array().last().cloned().ok_or(ExprError::ArrayIsEmpty)
+}
+
+pub fn last_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::Array],
+        function: FunctionType::BuiltIn(last),
+        output: DataType::Any,
+    }
+}

@@ -60,6 +60,7 @@ pub fn input_descriptor() -> FunctionDescriptor {
 }
 
 fn read_file(i: Input) -> Output {
+    dbg!(i[0].string());
     let input = std::fs::read_to_string(i[0].string()).unwrap();
     input.data()
 }

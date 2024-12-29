@@ -29,4 +29,7 @@ pub enum ExprError {
 
     #[error("Array is empty.")]
     ArrayIsEmpty,
+
+    #[error("Invalid numeric string: {0}. Could not decode.")]
+    BadNumber(String),
 }

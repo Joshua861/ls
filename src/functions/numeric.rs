@@ -553,3 +553,17 @@ pub fn trunc_descriptor() -> FunctionDescriptor {
         output: DataType::Number,
     }
 }
+
+fn parse_to_number(i: Input) -> Output {
+    Decimal::from_str(i[0].string())
+        .map_err(|_| ExprError::BadNumber(i[0].string().clone()))?
+        .data()
+}
+
+pub fn parse_to_number_descriptor() -> FunctionDescriptor {
+    FunctionDescriptor {
+        inputs: vec![DataType::String],
+        function: FunctionType::BuiltIn(parse_to_number),
+        output: DataType::Number,
+    }
+}

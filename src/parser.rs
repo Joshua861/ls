@@ -89,6 +89,51 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                 .delimited_by(just(Token::ArrayStart), just(Token::ArrayEnd))
                 .map(Expr::Array);
 
+            let closure = just(Token::Bar)
+                .ignore_then(
+                    select! {Token::Ident(name) => name}
+                        .then_ignore(just(Token::Colon))
+                        .then(select! {Token::Ident(t) => t})
+                        .repeated()
+                        .separated_by(just(Token::Comma)),
+                )
+                .then_ignore(just(Token::Bar))
+                .then(
+                    just(Token::Arrow)
+                        .ignore_then(select! {Token::Ident(t) => t})
+                        .or_not(),
+                )
+                .then(block.clone())
+                .boxed()
+                .map(|((inputs, output_type), block)| {
+                    let dt = |s: &str| -> DataType {
+                        DataType::from_str(s).unwrap_or_else(|_| {
+                            println!("Invalid type in closure signature");
+
+                            exit(2);
+                        })
+                    };
+
+                    let output_type = dt(&output_type.unwrap_or("Null".to_string()));
+
+                    let inputs = inputs
+                        .iter()
+                        .flatten()
+                        .map(|(name, t)| (name.clone(), dt(t)))
+                        .collect::<Vec<_>>();
+
+                    let input_types = inputs.iter().map(|(_, t)| t.clone()).collect::<Vec<_>>();
+                    let input_names = inputs.iter().map(|(n, _)| n.clone()).collect::<Vec<_>>();
+
+                    let function = FunctionDescriptor {
+                        inputs: input_types,
+                        output: output_type,
+                        function: FunctionType::Custom(block, input_names),
+                    };
+
+                    Expr::FunctionValue(function)
+                });
+
             let atom = block_mapped
                 .or(parenthesized)
                 .or(integer)
@@ -99,6 +144,7 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
                 .or(if_block)
                 .or(array)
                 .or(string)
+                .or(closure)
                 .boxed();
 
             let atom = atom

@@ -161,6 +161,9 @@ pub enum Token {
 
     #[token(":")]
     Colon,
+
+    #[token("|")]
+    Bar,
 }
 
 fn rem_first_and_last(value: String) -> String {
@@ -223,6 +226,7 @@ impl Display for Token {
                 Self::While => "while".into(),
                 Self::In => "in".into(),
                 Self::Fn => "fn".into(),
+                Self::Bar => "|".into(),
 
                 Self::Comment(s) => s,
             },

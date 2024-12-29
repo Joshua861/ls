@@ -1,0 +1,6 @@
+[1, 8, 0, 17, 19].map(|x: Number| {x * 2;}).for_each(|n: Number| {
+  n.string().surround("[", "]").center(20, "-").println();
+});
+
+[8, 10, 6, 10, 12].fold(0, |acc: Number, n: Number| { acc + n; }).println();
+[8, 10, 6, 10, 12].fold(0, |acc: Number, n: Number| { acc.max(n); }).println();

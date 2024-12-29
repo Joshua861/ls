@@ -1,0 +1,12 @@
+fn part_1() {
+    let input := read_file("/run/media/josh/4a6b1e31-4f2b-47db-ad71-ffd4ef04c2e4/repos/calculator/scripts/aoc-2025-day-1/input.txt");
+    input.split("\n").map(|x: String| {
+        print(x);
+        let parts := x.split("   ").map(|p: String| {p.parse_number();});
+        print(parts);
+    });
+
+    Null;
+}
+
+part_1();
