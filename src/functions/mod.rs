@@ -17,7 +17,7 @@ pub use array::*;
 
 use crate::{
     data::{Data, DataType},
-    expr::EResult,
+    expr::{EResult, Expr},
 };
 
 pub type Input = Vec<Data>;
@@ -27,8 +27,14 @@ pub type FunctionMap = HashMap<String, FunctionDescriptor>;
 #[derive(Debug, Clone)]
 pub struct FunctionDescriptor {
     pub inputs: Vec<DataType>,
-    pub function: fn(Input) -> Output,
+    pub function: FunctionType,
     pub output: DataType,
+}
+
+#[derive(Clone, Debug)]
+pub enum FunctionType {
+    BuiltIn(fn(Input) -> Output),
+    Custom(Vec<Expr>, Vec<String>),
 }
 
 pub fn builtints() -> FunctionMap {
@@ -109,6 +115,10 @@ pub fn builtints() -> FunctionMap {
         // other
         ("type", type_of_descriptor()),
         ("print", print_descriptor()),
+        ("println", println_descriptor()),
+        ("input", input_descriptor()),
+        ("read_file", read_file_descriptor()),
+        ("write_file", write_file_descriptor()),
     ] {
         map.insert(name.to_string(), descriptor);
     }

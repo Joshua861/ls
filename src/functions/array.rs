@@ -1,4 +1,4 @@
-use super::{FunctionDescriptor, Input, Output};
+use super::{FunctionDescriptor, FunctionType, Input, Output};
 use crate::{
     data::{Data, DataType, ToData},
     utils::strings::DotDisplay,
@@ -19,7 +19,7 @@ fn join_array(i: Input) -> Output {
 pub fn join_array_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Array, DataType::String],
-        function: join_array,
+        function: FunctionType::BuiltIn(join_array),
         output: DataType::String,
     }
 }
@@ -34,7 +34,7 @@ fn sort(i: Input) -> Output {
 pub fn sort_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Array],
-        function: sort,
+        function: FunctionType::BuiltIn(sort),
         output: DataType::Array,
     }
 }
@@ -46,7 +46,7 @@ fn length(i: Input) -> Output {
 pub fn length_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Array],
-        function: length,
+        function: FunctionType::BuiltIn(length),
         output: DataType::Number,
     }
 }
@@ -60,7 +60,7 @@ fn index(i: Input) -> Output {
 pub fn index_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Array, DataType::Number],
-        function: index,
+        function: FunctionType::BuiltIn(index),
         output: DataType::Any,
     }
 }
@@ -77,7 +77,7 @@ fn append(i: Input) -> Output {
 pub fn append_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Array, DataType::Any],
-        function: append,
+        function: FunctionType::BuiltIn(append),
         output: DataType::Array,
     }
 }
@@ -97,7 +97,7 @@ fn flatten(i: Input) -> Output {
 pub fn flatten_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Array],
-        function: flatten,
+        function: FunctionType::BuiltIn(flatten),
         output: DataType::Array,
     }
 }
@@ -112,7 +112,7 @@ fn reverse(i: Input) -> Output {
 pub fn reverse_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Array],
-        function: reverse,
+        function: FunctionType::BuiltIn(reverse),
         output: DataType::Array,
     }
 }
@@ -127,7 +127,7 @@ fn extend(i: Input) -> Output {
 pub fn extend_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Array, DataType::Array],
-        function: extend,
+        function: FunctionType::BuiltIn(extend),
         output: DataType::Array,
     }
 }
@@ -144,7 +144,7 @@ fn without(i: Input) -> Output {
 pub fn without_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Array, DataType::Number],
-        function: without,
+        function: FunctionType::BuiltIn(without),
         output: DataType::Array,
     }
 }
@@ -162,7 +162,7 @@ fn with_insert(i: Input) -> Output {
 pub fn with_insert_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Array, DataType::Number, DataType::Any],
-        function: with_insert,
+        function: FunctionType::BuiltIn(with_insert),
         output: DataType::Array,
     }
 }
@@ -176,7 +176,7 @@ fn range(i: Input) -> Output {
 pub fn range_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: range,
+        function: FunctionType::BuiltIn(range),
         output: DataType::Array,
     }
 }

@@ -1,7 +1,7 @@
 use std::{env, fs, process::exit};
 
 use chumsky::Parser;
-use data::Data;
+use data::{Data, DataType};
 use expr::{format_block, ExecutionState, Expr};
 use lexer::Token;
 use logos::Logos;
@@ -65,6 +65,23 @@ pub fn execute_block(block: &[Expr], state: &ExecutionState) -> (Data, Execution
     let mut output = Data::Null;
 
     for e in block {
+        if let Expr::FunctionDeclaration(name, desc) = e {
+            match desc.function.clone() {
+                functions::FunctionType::Custom(block, _) => {
+                    let dt = block.last().unwrap_or(&Expr::Null).data_type(state);
+
+                    if dt != desc.output && dt != DataType::Any && desc.output != DataType::Any {
+                        println!("Function `{name}` output type does not match block data type. If you don't know what the output will be, you can use the Any type.");
+                        exit(1);
+                    }
+                }
+                _ => unreachable!(),
+            }
+            inner_state.functions.insert(name.clone(), desc.clone());
+        }
+    }
+
+    for e in block {
         match e.eval(&mut inner_state) {
             Ok(result) => {
                 // println!("{}", e);
@@ -113,7 +130,7 @@ fn run(input: &str) -> (Vec<Token>, Vec<Expr>, Data) {
         }
     };
 
-    println!("{}", format_block(&expressions));
+    // println!("{}", format_block(&expressions));
 
     println!("\n---Execution---\n");
 

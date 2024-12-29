@@ -1,4 +1,4 @@
-use super::{FunctionDescriptor, Input, Output};
+use super::{FunctionDescriptor, FunctionType, Input, Output};
 use crate::data::{DataType, ToData};
 
 pub fn and(i: Input) -> Output {
@@ -8,7 +8,7 @@ pub fn and(i: Input) -> Output {
 pub fn and_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Bool, DataType::Bool],
-        function: and,
+        function: FunctionType::BuiltIn(and),
         output: DataType::Bool,
     }
 }
@@ -20,7 +20,7 @@ pub fn or(i: Input) -> Output {
 pub fn or_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Bool, DataType::Bool],
-        function: or,
+        function: FunctionType::BuiltIn(or),
         output: DataType::Bool,
     }
 }
@@ -32,7 +32,7 @@ pub fn eq(i: Input) -> Output {
 pub fn eq_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Any, DataType::Any],
-        function: eq,
+        function: FunctionType::BuiltIn(eq),
         output: DataType::Bool,
     }
 }
@@ -44,7 +44,7 @@ pub fn ne(i: Input) -> Output {
 pub fn ne_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Any, DataType::Any],
-        function: ne,
+        function: FunctionType::BuiltIn(ne),
         output: DataType::Bool,
     }
 }
@@ -56,7 +56,7 @@ pub fn not(i: Input) -> Output {
 pub fn not_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Bool],
-        function: not,
+        function: FunctionType::BuiltIn(not),
         output: DataType::Bool,
     }
 }
@@ -68,7 +68,7 @@ pub fn xor(i: Input) -> Output {
 pub fn xor_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Bool, DataType::Bool],
-        function: xor,
+        function: FunctionType::BuiltIn(xor),
         output: DataType::Bool,
     }
 }
@@ -80,7 +80,7 @@ pub fn gt(i: Input) -> Output {
 pub fn gt_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: gt,
+        function: FunctionType::BuiltIn(gt),
         output: DataType::Bool,
     }
 }
@@ -92,7 +92,7 @@ pub fn lt(i: Input) -> Output {
 pub fn lt_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: lt,
+        function: FunctionType::BuiltIn(lt),
         output: DataType::Bool,
     }
 }
@@ -104,7 +104,7 @@ pub fn ge(i: Input) -> Output {
 pub fn ge_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: ge,
+        function: FunctionType::BuiltIn(ge),
         output: DataType::Bool,
     }
 }
@@ -116,7 +116,7 @@ pub fn le(i: Input) -> Output {
 pub fn le_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: le,
+        function: FunctionType::BuiltIn(le),
         output: DataType::Bool,
     }
 }

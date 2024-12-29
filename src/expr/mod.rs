@@ -9,13 +9,13 @@ use rust_decimal::{prelude::FromPrimitive, Decimal};
 
 use crate::{
     constants::constants,
-    data::{format_types, format_vec, Data},
+    data::{format_types, format_vec, Data, DataType},
     execute_block,
     functions::{
         add_descriptor, and_descriptor, builtints, div_descriptor, eq_descriptor, ge_descriptor,
         gt_descriptor, le_descriptor, lt_descriptor, mod_descriptor, mul_descriptor, ne_descriptor,
         neg_descriptor, not_descriptor, or_descriptor, sub_descriptor, xor_descriptor,
-        FunctionDescriptor, FunctionMap,
+        FunctionDescriptor, FunctionMap, FunctionType,
     },
     utils::strings::{indent, DotDebug, DotDisplay},
 };
@@ -26,7 +26,7 @@ pub type VariableMap = HashMap<String, Data>;
 
 #[derive(Debug, Clone)]
 pub struct ExecutionState {
-    builtins: FunctionMap,
+    pub functions: FunctionMap,
     variables: VariableMap,
     constants: VariableMap,
 }
@@ -34,7 +34,7 @@ pub struct ExecutionState {
 impl ExecutionState {
     pub fn new() -> Self {
         Self {
-            builtins: builtints(),
+            functions: builtints(),
             variables: HashMap::new(),
             constants: constants(),
         }
@@ -79,6 +79,7 @@ pub enum Expr {
     Block(Vec<Expr>),
 
     Function(String, Vec<Expr>),
+    FunctionDeclaration(String, FunctionDescriptor),
     VariableDeclaration(String, BExpr),
     Variable(String),
 
@@ -103,7 +104,18 @@ macro_rules! run {
             .all(|(input, expected)| input == *expected || expected.is_any());
 
         if matching_types {
-            Ok(($func.function)(inputs))?
+            Ok(match $func.function {
+                FunctionType::BuiltIn(f) => f(inputs)?,
+                FunctionType::Custom(block, input_names) => {
+                    let mut state = ExecutionState::new();
+
+                    for (i, name) in input_names.iter().enumerate() {
+                        state.variables.insert(name.clone(), inputs[i].clone());
+                    }
+
+                    execute_block(&block, &state).0
+                }
+            })
         } else {
             let input_types = inputs.iter().map(|i| i._type()).collect::<Vec<_>>();
             Err(ExprError::InvalidFunctionArguements {
@@ -244,13 +256,14 @@ impl Expr {
             }
 
             Expr::Function(name, inputs) => {
-                if let Some(func) = state.builtins.get(name) {
+                if let Some(func) = state.functions.get(name) {
                     run_fn_owned(func.clone(), inputs, state)
                 } else {
                     // TODO: Allow users to define their own functions.
                     Err(ExprError::FunctionNotFound { name: name.clone() })
                 }
             }
+            Expr::FunctionDeclaration(_, _) => Ok(Data::Null),
             Expr::Variable(name) => {
                 if let Some(v) = state.variables.get(name) {
                     Ok(v.clone())
@@ -355,8 +368,47 @@ impl Display for Expr {
 
                     s
                 }
+
+                Self::FunctionDeclaration(name, block) => {
+                    todo!()
+                }
             }
         )
+    }
+}
+
+impl Expr {
+    pub fn data_type(&self, state: &ExecutionState) -> DataType {
+        match self {
+            Expr::String(_) => DataType::String,
+            Expr::Add(_, _)
+            | Expr::Sub(_, _)
+            | Expr::Mul(_, _)
+            | Expr::Div(_, _)
+            | Expr::Mod(_, _)
+            | Expr::Neg(_)
+            | Expr::Num(_) => DataType::Number,
+            Expr::Bool(_)
+            | Expr::Or(_, _)
+            | Expr::And(_, _)
+            | Expr::Not(_)
+            | Expr::Xor(_, _)
+            | Expr::Lt(_, _)
+            | Expr::Le(_, _)
+            | Expr::Gt(_, _)
+            | Expr::Ge(_, _)
+            | Expr::Eq(_, _)
+            | Expr::Ne(_, _) => DataType::Bool,
+            Expr::Null => DataType::Null,
+            Expr::Variable(_) => DataType::Any,
+            Expr::Function(name, _) => state.functions.get(name).map(|f| f.output).unwrap(),
+            Expr::FunctionDeclaration(_, _) => DataType::Null,
+            Expr::Array(_) => DataType::Array,
+            Expr::Block(block) => block.last().unwrap().data_type(state),
+            Expr::VariableDeclaration(_, _) => DataType::Null,
+            Expr::If(_, b, _, _) => b.last().unwrap().data_type(state),
+            Expr::For(_, _, _) | Expr::While(_, _) => DataType::Null,
+        }
     }
 }
 

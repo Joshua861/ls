@@ -2,7 +2,7 @@ use rand::Rng;
 use rust_decimal::prelude::*;
 use rust_decimal_macros::dec;
 
-use super::{FunctionDescriptor, Input, Output};
+use super::{FunctionDescriptor, FunctionType, Input, Output};
 use crate::{
     data::{DataType, ToData},
     expr::error::ExprError,
@@ -11,7 +11,7 @@ use crate::{
 pub fn mod_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: mod_func,
+        function: FunctionType::BuiltIn(mod_func),
         output: DataType::Number,
     }
 }
@@ -26,7 +26,7 @@ pub fn mod_func(i: Input) -> Output {
 pub fn add_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: add,
+        function: FunctionType::BuiltIn(add),
         output: DataType::Number,
     }
 }
@@ -41,7 +41,7 @@ pub fn add(i: Input) -> Output {
 pub fn sub_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: sub,
+        function: FunctionType::BuiltIn(sub),
         output: DataType::Number,
     }
 }
@@ -56,7 +56,7 @@ pub fn sub(i: Input) -> Output {
 pub fn mul_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: mul,
+        function: FunctionType::BuiltIn(mul),
         output: DataType::Number,
     }
 }
@@ -71,7 +71,7 @@ pub fn mul(i: Input) -> Output {
 pub fn div_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: div,
+        function: FunctionType::BuiltIn(div),
         output: DataType::Number,
     }
 }
@@ -90,7 +90,7 @@ pub fn div(i: Input) -> Output {
 pub fn neg_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number],
-        function: neg,
+        function: FunctionType::BuiltIn(neg),
         output: DataType::Number,
     }
 }
@@ -108,7 +108,7 @@ pub fn sqrt(i: Input) -> Output {
 pub fn sqrt_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number],
-        function: sqrt,
+        function: FunctionType::BuiltIn(sqrt),
         output: DataType::Number,
     }
 }
@@ -120,7 +120,7 @@ pub fn abs(i: Input) -> Output {
 pub fn abs_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number],
-        function: abs,
+        function: FunctionType::BuiltIn(abs),
         output: DataType::Number,
     }
 }
@@ -135,7 +135,7 @@ pub fn abs_diff(i: Input) -> Output {
 pub fn abs_diff_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: abs_diff,
+        function: FunctionType::BuiltIn(abs_diff),
         output: DataType::Number,
     }
 }
@@ -147,7 +147,7 @@ pub fn rand(_i: Input) -> Output {
 pub fn rand_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![],
-        function: rand,
+        function: FunctionType::BuiltIn(rand),
         output: DataType::Number,
     }
 }
@@ -166,7 +166,7 @@ pub fn rand_between(i: Input) -> Output {
 pub fn rand_between_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: rand_between,
+        function: FunctionType::BuiltIn(rand_between),
         output: DataType::Number,
     }
 }
@@ -178,7 +178,7 @@ pub fn max(i: Input) -> Output {
 pub fn max_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: max,
+        function: FunctionType::BuiltIn(max),
         output: DataType::Number,
     }
 }
@@ -190,7 +190,7 @@ pub fn min(i: Input) -> Output {
 pub fn min_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number, DataType::Number],
-        function: min,
+        function: FunctionType::BuiltIn(min),
         output: DataType::Number,
     }
 }
@@ -205,7 +205,7 @@ fn ceil(i: Input) -> Output {
 pub fn ceil_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number],
-        function: ceil,
+        function: FunctionType::BuiltIn(ceil),
         output: DataType::Number,
     }
 }
@@ -220,7 +220,7 @@ fn floor(i: Input) -> Output {
 pub fn floor_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number],
-        function: floor,
+        function: FunctionType::BuiltIn(floor),
         output: DataType::Number,
     }
 }
@@ -235,7 +235,7 @@ fn round(i: Input) -> Output {
 pub fn round_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Number],
-        function: round,
+        function: FunctionType::BuiltIn(round),
         output: DataType::Number,
     }
 }

@@ -1,3 +1,5 @@
-fn section(s: String) -> Null {
-    s.surround("[", "]").center(30, "-").print()
+section("test");
+
+fn section(s: String) {
+    s.surround("[", "]").center(30, "-").print();
 }

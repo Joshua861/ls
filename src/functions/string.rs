@@ -1,4 +1,4 @@
-use super::{FunctionDescriptor, Input, Output};
+use super::{FunctionDescriptor, FunctionType, Input, Output};
 use crate::{
     data::{Data, DataType, ToData},
     expr::error::ExprError,
@@ -18,7 +18,7 @@ fn string(i: Input) -> Output {
 pub fn string_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Any],
-        function: string,
+        function: FunctionType::BuiltIn(string),
         output: DataType::String,
     }
 }
@@ -30,7 +30,7 @@ fn join(i: Input) -> Output {
 pub fn join_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Any, DataType::Any],
-        function: join,
+        function: FunctionType::BuiltIn(join),
         output: DataType::String,
     }
 }
@@ -42,7 +42,7 @@ fn join_after(i: Input) -> Output {
 pub fn join_after_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Any, DataType::Any],
-        function: join_after,
+        function: FunctionType::BuiltIn(join_after),
         output: DataType::String,
     }
 }
@@ -54,7 +54,7 @@ fn surround(i: Input) -> Output {
 pub fn surround_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::Any, DataType::Any, DataType::Any],
-        function: surround,
+        function: FunctionType::BuiltIn(surround),
         output: DataType::String,
     }
 }
@@ -66,7 +66,7 @@ fn uppercase(i: Input) -> Output {
 pub fn uppercase_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: uppercase,
+        function: FunctionType::BuiltIn(uppercase),
         output: DataType::String,
     }
 }
@@ -78,7 +78,7 @@ fn lowercase(i: Input) -> Output {
 pub fn lowercase_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: lowercase,
+        function: FunctionType::BuiltIn(lowercase),
         output: DataType::String,
     }
 }
@@ -90,7 +90,7 @@ fn snake_case(i: Input) -> Output {
 pub fn snake_case_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: snake_case,
+        function: FunctionType::BuiltIn(snake_case),
         output: DataType::String,
     }
 }
@@ -102,7 +102,7 @@ fn kebab_case(i: Input) -> Output {
 pub fn kebab_case_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: kebab_case,
+        function: FunctionType::BuiltIn(kebab_case),
         output: DataType::String,
     }
 }
@@ -114,7 +114,7 @@ fn title_case(i: Input) -> Output {
 pub fn title_case_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: title_case,
+        function: FunctionType::BuiltIn(title_case),
         output: DataType::String,
     }
 }
@@ -126,7 +126,7 @@ fn upper_camel_case(i: Input) -> Output {
 pub fn upper_camel_case_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: upper_camel_case,
+        function: FunctionType::BuiltIn(upper_camel_case),
         output: DataType::String,
     }
 }
@@ -138,7 +138,7 @@ fn lower_camel_case(i: Input) -> Output {
 pub fn lower_camel_case_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: lower_camel_case,
+        function: FunctionType::BuiltIn(lower_camel_case),
         output: DataType::String,
     }
 }
@@ -150,7 +150,7 @@ fn shouty_kebab_case(i: Input) -> Output {
 pub fn shouty_kebab_case_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: shouty_kebab_case,
+        function: FunctionType::BuiltIn(shouty_kebab_case),
         output: DataType::String,
     }
 }
@@ -162,7 +162,7 @@ fn shouty_snake_case(i: Input) -> Output {
 pub fn shouty_snake_case_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: shouty_snake_case,
+        function: FunctionType::BuiltIn(shouty_snake_case),
         output: DataType::String,
     }
 }
@@ -174,7 +174,7 @@ fn train_case(i: Input) -> Output {
 pub fn train_case_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: train_case,
+        function: FunctionType::BuiltIn(train_case),
         output: DataType::String,
     }
 }
@@ -191,7 +191,7 @@ fn center(i: Input) -> Output {
 pub fn center_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String, DataType::Number, DataType::String],
-        function: center,
+        function: FunctionType::BuiltIn(center),
         output: DataType::String,
     }
 }
@@ -206,7 +206,7 @@ fn count(i: Input) -> Output {
 pub fn count_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String, DataType::String],
-        function: count,
+        function: FunctionType::BuiltIn(count),
         output: DataType::Number,
     }
 }
@@ -221,7 +221,7 @@ fn ends_with(i: Input) -> Output {
 pub fn ends_with_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String, DataType::String],
-        function: ends_with,
+        function: FunctionType::BuiltIn(ends_with),
         output: DataType::Bool,
     }
 }
@@ -236,7 +236,7 @@ fn starts_with(i: Input) -> Output {
 pub fn starts_with_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String, DataType::String],
-        function: starts_with,
+        function: FunctionType::BuiltIn(starts_with),
         output: DataType::Bool,
     }
 }
@@ -251,7 +251,7 @@ fn find(i: Input) -> Output {
 pub fn find_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String, DataType::String],
-        function: find,
+        function: FunctionType::BuiltIn(find),
         output: DataType::Number,
     }
 }
@@ -263,7 +263,7 @@ fn is_alphanumeric(i: Input) -> Output {
 pub fn is_alphanumeric_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: is_alphanumeric,
+        function: FunctionType::BuiltIn(is_alphanumeric),
         output: DataType::Bool,
     }
 }
@@ -275,7 +275,7 @@ fn is_alphabetic(i: Input) -> Output {
 pub fn is_alphabetic_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: is_alphabetic,
+        function: FunctionType::BuiltIn(is_alphabetic),
         output: DataType::Bool,
     }
 }
@@ -287,7 +287,7 @@ fn is_ascii(i: Input) -> Output {
 pub fn is_ascii_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: is_ascii,
+        function: FunctionType::BuiltIn(is_ascii),
         output: DataType::Bool,
     }
 }
@@ -299,7 +299,7 @@ fn is_numeric(i: Input) -> Output {
 pub fn is_numeric_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: is_numeric,
+        function: FunctionType::BuiltIn(is_numeric),
         output: DataType::Bool,
     }
 }
@@ -316,7 +316,7 @@ fn matches(i: Input) -> Output {
 pub fn matches_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String, DataType::String],
-        function: matches,
+        function: FunctionType::BuiltIn(matches),
         output: DataType::Bool,
     }
 }
@@ -328,7 +328,7 @@ fn is_lowercase(i: Input) -> Output {
 pub fn is_lowercase_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: is_lowercase,
+        function: FunctionType::BuiltIn(is_lowercase),
         output: DataType::Bool,
     }
 }
@@ -340,7 +340,7 @@ fn is_uppercase(i: Input) -> Output {
 pub fn is_uppercase_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: is_uppercase,
+        function: FunctionType::BuiltIn(is_uppercase),
         output: DataType::Bool,
     }
 }
@@ -352,7 +352,7 @@ fn is_whitespace(i: Input) -> Output {
 pub fn is_whitespace_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: is_whitespace,
+        function: FunctionType::BuiltIn(is_whitespace),
         output: DataType::Bool,
     }
 }
@@ -364,7 +364,7 @@ fn trim(i: Input) -> Output {
 pub fn trim_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String],
-        function: trim,
+        function: FunctionType::BuiltIn(trim),
         output: DataType::String,
     }
 }
@@ -380,7 +380,7 @@ fn replace(i: Input) -> Output {
 pub fn replace_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String, DataType::String, DataType::String],
-        function: replace,
+        function: FunctionType::BuiltIn(replace),
         output: DataType::String,
     }
 }
@@ -399,7 +399,7 @@ fn split(i: Input) -> Output {
 pub fn split_descriptor() -> FunctionDescriptor {
     FunctionDescriptor {
         inputs: vec![DataType::String, DataType::String],
-        function: split,
+        function: FunctionType::BuiltIn(split),
         output: DataType::Array,
     }
 }

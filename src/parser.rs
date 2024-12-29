@@ -1,3 +1,5 @@
+use std::{process::exit, str::FromStr};
+
 use ariadne::{Color, Label, Report, ReportKind, Source};
 use chumsky::{
     error::Simple,
@@ -6,7 +8,9 @@ use chumsky::{
 };
 
 use crate::{
+    data::{Data, DataType},
     expr::Expr,
+    functions::{FunctionDescriptor, FunctionType},
     lexer::Token,
     utils::strings::{DotDebug, DotDisplay},
 };
@@ -220,6 +224,53 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
             .then_ignore(just(Token::Eol))
             .boxed();
 
+        let function_declaration = just(Token::Fn)
+            .ignore_then(select! {Token::Ident(n) => n})
+            .then(
+                select! {Token::Ident(n) => n}
+                    .then_ignore(just(Token::Colon))
+                    .then(select! {Token::Ident(t) => t})
+                    .repeated()
+                    .delimited_by(just(Token::LParen), just(Token::RParen))
+                    .separated_by(just(Token::Comma)),
+            )
+            .boxed()
+            .then(
+                just(Token::Arrow)
+                    .ignore_then(select! {Token::Ident(t) => t})
+                    .or_not(),
+            )
+            .then(block.clone())
+            .boxed()
+            .map(|(((name, inputs), output_type), block)| {
+                let dt = |s: &str| -> DataType {
+                    DataType::from_str(s).unwrap_or_else(|_| {
+                        println!("Invalid type in function `{name}` signature");
+
+                        exit(2);
+                    })
+                };
+
+                let output_type = dt(&output_type.unwrap_or("Null".to_string()));
+
+                let inputs = inputs
+                    .iter()
+                    .flatten()
+                    .map(|(name, t)| (name.clone(), dt(t)))
+                    .collect::<Vec<_>>();
+
+                let input_types = inputs.iter().map(|(_, t)| t.clone()).collect::<Vec<_>>();
+                let input_names = inputs.iter().map(|(n, _)| n.clone()).collect::<Vec<_>>();
+
+                let function = FunctionDescriptor {
+                    inputs: input_types,
+                    output: output_type,
+                    function: FunctionType::Custom(block, input_names),
+                };
+
+                Expr::FunctionDeclaration(name, function)
+            });
+
         // let variable_change = select! { Token::Ident(k) => k }
         //     .then_ignore(just(Token::AssignTo))
         //     .then(expr.clone())
@@ -231,6 +282,7 @@ pub fn parser() -> impl Parser<Token, Vec<Expr>, Error = Simple<Token>> {
             .or(expr.clone().then_ignore(just(Token::Eol)))
             .or(while_loop)
             .or(for_loop)
+            .or(function_declaration)
     });
 
     statement.repeated().then_ignore(end())
